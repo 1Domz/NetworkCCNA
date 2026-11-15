@@ -10,8 +10,13 @@ export type CourseLesson = {
 };
 
 export type LessonNotes = {
+  heading?: string;
   introduction: string;
-  layers: {
+  reference?: {
+    label: string;
+    url: string;
+  };
+  layers?: {
     name: string;
     responsibility: string;
     examples: string;
@@ -40,16 +45,93 @@ export const courseModules: CourseModule[] = [
         title: "Network devices",
         duration: "7 min",
         summary:
-          "Hosts, switches, routers, access points, and firewalls each play different roles in moving or protecting network traffic.",
+          "Learn how clients, servers, switches, routers, and firewalls work together to connect devices, carry data, and protect networks.",
         keyConcept:
-          "End devices create or consume data; intermediary devices connect networks and make forwarding decisions.",
+          "Clients and servers use network services; switches connect devices in a LAN, routers move traffic between networks, and firewalls apply security rules.",
         objectives: [
-          "Identify common end devices and intermediary devices.",
-          "Explain the basic roles of switches, routers, and access points.",
+          "Identify network nodes, clients, servers, switches, routers, and firewalls.",
+          "Explain how switches, routers, and firewalls differ using a simple network path.",
         ],
         term: "Default gateway",
         definition:
           "The router a host uses to reach destinations outside its local IP network.",
+        notes: {
+          heading: "Network devices",
+          introduction:
+            "A computer network is two or more connected nodes that can exchange information or share resources. Devices connect with cables or wirelessly. End hosts create or use information; intermediary devices connect devices and networks and help traffic reach its destination.",
+          reference: {
+            label: "Jeremy's IT Lab — Free CCNA: Network Devices (Day 1)",
+            url: "https://www.youtube.com/watch?v=H8W9oMNSuwo&list=PLxbwE86jKRgMpuZuLBivzlM8s2Dk5lXBQ&index=1",
+          },
+          sections: [
+            {
+              title: "What is a network?",
+              paragraphs: [
+                "Even two computers connected directly can form a simple network and share information when configured to communicate. A home, school, or office network adds more devices and often uses switches and routers to connect them.",
+                "Think of the connection like a path between two desks: one child can pass a note to the other. A computer network provides a path for digital messages and shared resources such as files or a printer.",
+              ],
+              points: [
+                "A node is any device that participates in the network.",
+                "The Internet is a large collection of interconnected networks.",
+              ],
+            },
+            {
+              title: "Clients and servers are both network nodes",
+              paragraphs: [
+                "A node is any device that participates in a network. A client is a device or program that requests or uses a service; a server provides a service or resource to clients. A single device can act as a client for one service and a server for another.",
+                "For example, when a tablet requests a web page, the tablet is the client and the computer hosting the site is the server. Servers and clients are both end hosts, also called endpoints.",
+              ],
+              points: [
+                "Examples of clients include computers, phones, and tablets.",
+                "Servers can provide web pages, files, printing, or other shared services.",
+                "A network lets endpoints communicate and share resources, such as a printer or documents.",
+              ],
+            },
+            {
+              title: "Switches connect devices within a LAN",
+              paragraphs: [
+                "A switch provides connectivity for end hosts in the same local area network (LAN). Its physical ports are where wired devices connect. Many enterprise switches have 24 or more ports, while smaller models may have fewer.",
+                "In a school or office, a switch lets computers and printers on the local network communicate. A basic Layer 2 switch forwards frames within its LAN; connecting separate IP networks is the router's job. Some multilayer switches can also perform routing.",
+              ],
+              points: [
+                "Switches typically offer many host-facing interfaces.",
+                "A classroom switch can connect student computers and a shared printer.",
+                "Cisco Catalyst is a family of switches; the exact model determines its capabilities.",
+              ],
+            },
+            {
+              title: "Routers connect different networks",
+              paragraphs: [
+                "A router forwards IP packets between separate networks toward their destination. A host normally sends traffic for a remote network to its default gateway, which is usually the router interface on the local network.",
+                "A branch-to-branch path might carry traffic from a PC to a local switch, through a router and a wide-area network, then through a remote router and switch to a server. A home router similarly connects a home LAN to an Internet service provider. Router interface counts vary by model, though routers commonly have fewer host-facing ports than access switches.",
+              ],
+              points: [
+                "The local switch handles communication within the LAN; routers move traffic between LANs.",
+                "A router chooses a next hop based on the destination network and its routing information.",
+                "Cisco ISR refers to a family of integrated services routers.",
+              ],
+            },
+            {
+              title: "Firewalls enforce traffic rules",
+              paragraphs: [
+                "A firewall monitors network traffic and allows or blocks it according to configured security rules. A network firewall can be placed at a boundary between networks; a host-based firewall is software on an individual computer that filters traffic entering or leaving that host.",
+                "In a branch-to-branch connection, firewalls can inspect traffic as it crosses network boundaries. Next-generation firewalls add more advanced filtering and inspection capabilities. Firewalls reduce risk, but they do not guarantee complete security.",
+              ],
+              points: [
+                "A network firewall is like a guard checking visitors at a building entrance.",
+                "A host-based firewall is like a lock protecting one room inside the building.",
+                "Cisco ASA and Firepower are firewall product families.",
+              ],
+            },
+            {
+              title: "Put the devices together",
+              paragraphs: [
+                "Imagine a computer sending a request to a server in another branch. The client creates the request, the local switch carries it across the LAN, and the default gateway router forwards it toward the remote network. Firewalls apply their rules along the path. At the destination, the remote router and switch deliver the traffic to the server.",
+                "A simple way to remember the roles: clients ask, servers provide, switches connect devices locally, routers connect networks, and firewalls filter traffic.",
+              ],
+            },
+          ],
+        },
       },
       {
         title: "Network topologies",

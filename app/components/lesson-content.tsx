@@ -1,4 +1,10 @@
+"use client";
+
+import { useState } from "react";
 import type { CourseLesson } from "../data/course";
+import type { LessonExamResult } from "../data/course-progress";
+import { LessonQuiz } from "./lesson-quiz";
+import { LessonNotes } from "./lesson-notes";
 
 type LessonContentProps = {
   moduleTitle: string;
@@ -8,7 +14,8 @@ type LessonContentProps = {
   isComplete: boolean;
   canNavigatePrevious: boolean;
   canNavigateNext: boolean;
-  onToggleComplete: () => void;
+  previousExamResult?: LessonExamResult;
+  onComplete: (score: number, total: number) => void;
   onPrevious: () => void;
   onNext: () => void;
 };
@@ -21,10 +28,13 @@ export function LessonContent({
   isComplete,
   canNavigatePrevious,
   canNavigateNext,
-  onToggleComplete,
+  previousExamResult,
+  onComplete,
   onPrevious,
   onNext,
 }: LessonContentProps) {
+  const [quizOpen, setQuizOpen] = useState(false);
+
   return (
     <>
       <article className="min-w-0 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_8px_30px_-20px_rgba(15,23,42,0.22)] sm:p-8">
@@ -136,18 +146,58 @@ export function LessonContent({
           </ul>
         </section>
 
+        {lesson.notes && <LessonNotes notes={lesson.notes} />}
+
+        <section className="mt-8 rounded-xl border border-cyan-100 bg-cyan-50/70 p-4 sm:p-5">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="max-w-lg">
+              <p className="text-sm font-semibold text-slate-900">
+                {isComplete ? "Lesson passed" : "Unlock the next lesson"}
+              </p>
+              <p className="mt-1 text-sm leading-6 text-slate-600">
+                {isComplete
+                  ? "You passed this lesson exam. Review it any time."
+                  : "Score at least 90% on the exam to unlock the next lesson."}
+              </p>
+            </div>
+            <button
+              className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+                isComplete
+                  ? "border border-emerald-200 bg-white text-emerald-800 hover:bg-emerald-50"
+                  : "bg-cyan-600 text-white shadow-sm hover:bg-cyan-700"
+              }`}
+              onClick={() => setQuizOpen((open) => !open)}
+              type="button"
+            >
+              {quizOpen
+                ? "Hide exam"
+                : isComplete
+                  ? "Review exam"
+                  : "Start lesson exam"}
+            </button>
+          </div>
+        </section>
+
+        {quizOpen && (
+          <LessonQuiz
+            key={`${moduleIndex}-${lessonIndex}`}
+            lesson={lesson}
+            onClose={() => setQuizOpen(false)}
+            onComplete={onComplete}
+            previousResult={previousExamResult}
+          />
+        )}
+
         <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-5">
-          <button
-            className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+          <span
+            className={`rounded-xl px-4 py-2.5 text-sm font-semibold ${
               isComplete
-                ? "bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
-                : "bg-cyan-600 text-white shadow-sm hover:bg-cyan-700"
+                ? "bg-emerald-50 text-emerald-800"
+                : "bg-slate-100 text-slate-600"
             }`}
-            onClick={onToggleComplete}
-            type="button"
           >
-            {isComplete ? "Completed ✓" : "Mark lesson complete"}
-          </button>
+            {isComplete ? "Passed ✓" : "Exam required to unlock next lesson"}
+          </span>
           <div className="flex gap-2">
             <button
               aria-label="Previous lesson"

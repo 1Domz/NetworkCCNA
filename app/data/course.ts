@@ -6,6 +6,22 @@ export type CourseLesson = {
   objectives: string[];
   term: string;
   definition: string;
+  notes?: LessonNotes;
+};
+
+export type LessonNotes = {
+  introduction: string;
+  layers: {
+    name: string;
+    responsibility: string;
+    examples: string;
+    dataUnit: string;
+  }[];
+  sections: {
+    title: string;
+    paragraphs: string[];
+    points?: string[];
+  }[];
 };
 
 export type CourseModule = {
@@ -79,6 +95,119 @@ export const courseModules: CourseModule[] = [
         term: "Protocol",
         definition:
           "A set of agreed rules that allows networked systems to communicate.",
+        notes: {
+          introduction:
+            "The TCP/IP model organizes network communication into layers with distinct responsibilities. Each layer uses the service below it and provides a service to the layer above it. This lesson uses the common five-layer teaching view.",
+          layers: [
+            {
+              name: "Application",
+              responsibility:
+                "Provides network services and formats data for applications.",
+              examples: "HTTP, DNS, SMTP",
+              dataUnit: "Data",
+            },
+            {
+              name: "Transport",
+              responsibility:
+                "Delivers data between application processes and uses port numbers to identify services.",
+              examples: "TCP, UDP",
+              dataUnit: "Segment (TCP) or datagram (UDP)",
+            },
+            {
+              name: "Internet",
+              responsibility:
+                "Uses IP addressing and routing to move packets between networks.",
+              examples: "IPv4, IPv6",
+              dataUnit: "Packet",
+            },
+            {
+              name: "Link",
+              responsibility:
+                "Uses local-link addressing to deliver a frame toward the next hop.",
+              examples: "Ethernet, Wi-Fi",
+              dataUnit: "Frame",
+            },
+            {
+              name: "Physical",
+              responsibility:
+                "Carries bits as electrical, optical, or radio signals; includes the media and signaling characteristics.",
+              examples: "Copper cable, fiber, radio",
+              dataUnit: "Bits",
+            },
+          ],
+          sections: [
+            {
+              title: "Protocols, standards, and organizations",
+              paragraphs: [
+                "A protocol defines rules for communication. A standard is an agreed specification that helps equipment and software from different vendors work together.",
+                "IEEE develops LAN standards such as Ethernet (802.3) and Wi-Fi (802.11). The IETF develops Internet protocols and publishes them as RFCs.",
+              ],
+              points: [
+                "Devices can interoperate when they implement compatible protocols and standards.",
+                "A local Wi-Fi connection and an Internet IP connection rely on standards from different organizations.",
+              ],
+            },
+            {
+              title: "A brief history of TCP/IP",
+              paragraphs: [
+                "ARPANET began in 1969 and initially used NCP. Work by Vint Cerf and Bob Kahn on TCP and IP led to ARPANET's transition to TCP/IP on January 1, 1983. Open specifications helped the protocol suite spread across different systems and vendors.",
+              ],
+            },
+            {
+              title: "Why networking is layered",
+              paragraphs: [
+                "Layering divides communication into jobs. Each layer relies on the service directly below it and provides a service to the layer above it. This separation makes the overall system easier to understand and maintain.",
+                "The layers cooperate, but their responsibilities are distinct. A change to one technology, such as using Wi-Fi instead of Ethernet for local access, does not normally require changing the application protocol.",
+              ],
+              points: [
+                "Adjacent-layer interaction describes how neighboring layers exchange services.",
+                "Same-layer interaction describes how matching protocols on two devices interpret corresponding protocol information.",
+                "Even when peer layers communicate logically, data still travels down the sender's stack and up the receiver's stack.",
+              ],
+            },
+            {
+              title: "Encapsulation, PDUs, and payloads",
+              paragraphs: [
+                "As data moves down the sender's stack, each layer adds control information. The transport layer adds its header, the Internet layer adds an IP header, and the Link layer adds local-delivery information such as a frame header and error-detection trailer. The Physical layer sends the resulting bits.",
+                "A protocol data unit (PDU) is the name for the data handled at a layer. The data carried inside a layer's PDU is its payload. At the destination, the receiving device processes and removes the encapsulation in reverse order; this is called decapsulation.",
+              ],
+              points: [
+                "Transport: a TCP segment or UDP datagram.",
+                "Internet: an IP packet.",
+                "Link: a frame carrying the packet across one local link.",
+                "Physical: bits carried as signals.",
+              ],
+            },
+            {
+              title: "TCP and UDP",
+              paragraphs: [
+                "TCP establishes a connection and provides ordered, reliable delivery using acknowledgments and retransmission. UDP sends datagrams without those delivery guarantees, leaving more responsibility to the application.",
+                "Transport-layer port numbers help a host deliver received data to the correct application service. For example, HTTP commonly uses port 80 and HTTPS commonly uses port 443.",
+              ],
+            },
+            {
+              title: "Following a web request",
+              paragraphs: [
+                "When a browser requests a web page, HTTP or HTTPS defines the application message. Transport information identifies the destination service, IP addressing carries the packet toward the server, and the local link delivers a frame to the next hop.",
+                "The frame is only for the current link. A router removes it and builds a new frame for the next link, while the packet's end-to-end IP destination remains the server.",
+              ],
+            },
+            {
+              title: "TCP/IP and OSI layer views",
+              paragraphs: [
+                "The TCP/IP suite is widely used in real networks, while the seven-layer OSI model remains a common reference for learning and troubleshooting.",
+                "Networking references group related functions differently. A four-layer TCP/IP view combines Link and Physical into Network Access; the five-layer teaching view separates them. In that five-layer view, Application groups functions often associated with the OSI Application, Presentation, and Session layers.",
+              ],
+            },
+            {
+              title: "A simple delivery analogy",
+              paragraphs: [
+                "Think of sending a letter: its message is the application data, the recipient resembles a transport port, the street address resembles an IP address, and the local delivery step resembles a link-layer frame. Roads and vehicles represent the physical medium.",
+                "The analogy also shows how a delivery route can change while the message stays the same, just as a network can change its local path without changing the application data.",
+              ],
+            },
+          ],
+        },
       },
     ],
   },

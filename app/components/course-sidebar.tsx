@@ -1,11 +1,13 @@
 "use client";
 
 import { courseModules } from "../data/course";
+import { getLessonOrder } from "../data/course-progress";
 
 type CourseSidebarProps = {
   activeModuleIndex: number;
   activeLessonIndex: number;
   completedLessons: string[];
+  unlockedLessonCount: number;
   onSelectModule: (moduleIndex: number) => void;
   onSelectLesson: (moduleIndex: number, lessonIndex: number) => void;
   onClose?: () => void;
@@ -17,6 +19,7 @@ export function CourseSidebar({
   activeModuleIndex,
   activeLessonIndex,
   completedLessons,
+  unlockedLessonCount,
   onSelectModule,
   onSelectLesson,
   onClose,
@@ -61,6 +64,8 @@ export function CourseSidebar({
       >
         <ol className="space-y-1">
           {courseModules.map((module, moduleIndex) => {
+            const moduleStartOrder = getLessonOrder(moduleIndex, 0);
+            const isModuleUnlocked = moduleStartOrder <= unlockedLessonCount;
             const moduleCompleteCount = module.lessons.filter(
               (_, lessonIndex) =>
                 completedLessons.includes(`${moduleIndex}-${lessonIndex}`),
@@ -71,12 +76,19 @@ export function CourseSidebar({
               <li key={module.title}>
                 <button
                   aria-expanded={isActive}
-                  className={`group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition ${
+                  aria-disabled={!isModuleUnlocked}
+                  className={`group flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition disabled:cursor-not-allowed disabled:opacity-60 ${
                     isActive
                       ? "bg-cyan-400/10 text-white ring-1 ring-inset ring-cyan-300/20"
                       : "text-slate-400 hover:bg-white/5 hover:text-slate-100"
                   }`}
+                  disabled={!isModuleUnlocked}
                   onClick={() => onSelectModule(moduleIndex)}
+                  title={
+                    isModuleUnlocked
+                      ? undefined
+                      : "Pass the previous lesson exam with at least 90% to unlock this chapter."
+                  }
                   type="button"
                 >
                   <span
@@ -93,22 +105,51 @@ export function CourseSidebar({
                       {module.title}
                     </span>
                     <span className="mt-0.5 block text-[11px] text-slate-500">
-                      {moduleCompleteCount}/{module.lessons.length} lessons
+                      {isModuleUnlocked
+                        ? `${moduleCompleteCount}/${module.lessons.length} lessons`
+                        : "Locked - pass the previous exam"}
                     </span>
                   </span>
-                  <span
-                    aria-hidden="true"
-                    className={`text-xs text-slate-500 transition-transform ${
-                      isActive ? "rotate-180" : ""
-                    }`}
-                  >
-                    ▾
-                  </span>
+                  {isModuleUnlocked ? (
+                    <span
+                      aria-hidden="true"
+                      className={`text-xs text-slate-500 transition-transform ${
+                        isActive ? "rotate-180" : ""
+                      }`}
+                    >
+                      ▾
+                    </span>
+                  ) : (
+                    <svg
+                      aria-hidden="true"
+                      className="size-3.5 shrink-0 text-slate-500"
+                      fill="none"
+                      viewBox="0 0 16 16"
+                    >
+                      <rect
+                        x="3.5"
+                        y="7"
+                        width="9"
+                        height="7"
+                        rx="1.5"
+                        stroke="currentColor"
+                        strokeWidth="1.3"
+                      />
+                      <path
+                        d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeWidth="1.3"
+                      />
+                    </svg>
+                  )}
                 </button>
 
                 {isActive && (
                   <ol className="ml-7 mt-1 space-y-0.5 border-l border-white/10 pb-2 pl-3">
                     {module.lessons.map((lesson, lessonIndex) => {
+                      const lessonOrder = moduleStartOrder + lessonIndex;
+                      const isUnlocked = lessonOrder <= unlockedLessonCount;
                       const isSelected = lessonIndex === activeLessonIndex;
                       const isComplete = completedLessons.includes(
                         `${moduleIndex}-${lessonIndex}`,
@@ -118,13 +159,22 @@ export function CourseSidebar({
                         <li key={lesson.title}>
                           <button
                             aria-current={isSelected ? "step" : undefined}
-                            className={`flex w-full items-start gap-2 rounded-lg px-2.5 py-2 text-left text-xs leading-5 transition ${
+                            aria-disabled={!isUnlocked}
+                            className={`flex w-full items-start gap-2 rounded-lg px-2.5 py-2 text-left text-xs leading-5 transition disabled:cursor-not-allowed ${
                               isSelected
                                 ? "bg-white/[0.08] font-medium text-cyan-200"
-                                : "text-slate-400 hover:bg-white/[0.05] hover:text-slate-200"
+                                : isUnlocked
+                                  ? "text-slate-400 hover:bg-white/[0.05] hover:text-slate-200"
+                                  : "text-slate-600 opacity-60"
                             }`}
+                            disabled={!isUnlocked}
                             onClick={() =>
                               onSelectLesson(moduleIndex, lessonIndex)
+                            }
+                            title={
+                              isUnlocked
+                                ? undefined
+                                : "Pass the previous lesson exam with at least 90% to unlock."
                             }
                             type="button"
                           >
@@ -134,12 +184,23 @@ export function CourseSidebar({
                                   ? "bg-emerald-400/15 text-emerald-300"
                                   : isSelected
                                     ? "bg-cyan-300/15 text-cyan-200"
-                                    : "bg-white/[0.06] text-slate-500"
+                                    : isUnlocked
+                                      ? "bg-white/[0.06] text-slate-500"
+                                      : "bg-white/[0.03] text-slate-600"
                               }`}
                             >
                               {isComplete ? "✓" : lessonIndex + 1}
                             </span>
-                            <span>{lesson.title}</span>
+                            <span>
+                              {lesson.title}
+                              {!isUnlocked && (
+                                <span className="sr-only">
+                                  {" "}
+                                  Locked. Pass the previous exam with at least
+                                  90% to unlock.
+                                </span>
+                              )}
+                            </span>
                           </button>
                         </li>
                       );
@@ -195,6 +256,9 @@ export function CourseSidebar({
           </div>
           <p className="mt-2 text-[11px] text-slate-500">
             {completedCount} of {totalLessons} lessons completed
+          </p>
+          <p className="mt-1 text-[11px] text-slate-500">
+            Progress is saved on this device.
           </p>
         </div>
       </div>

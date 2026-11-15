@@ -1,9 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { CourseSidebar } from "./components/course-sidebar";
 import { LessonContent } from "./components/lesson-content";
 import { courseModules } from "./data/course";
+import {
+  getCourseProgressSnapshot,
+  getLessonOrder,
+  getServerCourseProgressSnapshot,
+  saveCourseProgress,
+  subscribeToCourseProgress,
+} from "./data/course-progress";
 
 function NetworkLogo() {
   return (
@@ -31,26 +38,36 @@ function NetworkLogo() {
 export default function Home() {
   const [activeModuleIndex, setActiveModuleIndex] = useState(0);
   const [activeLessonIndex, setActiveLessonIndex] = useState(0);
-  const [completedLessons, setCompletedLessons] = useState<string[]>([]);
   const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [mobileSidebarMounted, setMobileSidebarMounted] = useState(false);
   const [headerHidden, setHeaderHidden] = useState(false);
+  const progressSnapshot = useSyncExternalStore(
+    subscribeToCourseProgress,
+    getCourseProgressSnapshot,
+    getServerCourseProgressSnapshot,
+  );
+  const courseProgress = progressSnapshot.progress;
+  const progressError = progressSnapshot.error;
 
   const activeModule = courseModules[activeModuleIndex];
   const activeLesson = activeModule.lessons[activeLessonIndex];
   const lessonId = `${activeModuleIndex}-${activeLessonIndex}`;
+  const completedLessons = courseProgress.completedLessons;
+  const activeLessonOrder = getLessonOrder(
+    activeModuleIndex,
+    activeLessonIndex,
+  );
   const isComplete = completedLessons.includes(lessonId);
   const totalLessons = courseModules.reduce(
     (total, module) => total + module.lessons.length,
     0,
   );
   const progress = Math.round((completedLessons.length / totalLessons) * 100);
-  const canNavigatePrevious =
-    activeModuleIndex > 0 || activeLessonIndex > 0;
+  const canNavigatePrevious = activeLessonOrder > 0;
   const canNavigateNext =
-    activeModuleIndex < courseModules.length - 1 ||
-    activeLessonIndex < activeModule.lessons.length - 1;
+    activeLessonOrder < totalLessons - 1 &&
+    activeLessonOrder < completedLessons.length;
 
   useEffect(() => {
     let previousScrollY = window.scrollY;
@@ -104,12 +121,25 @@ export default function Home() {
   }
 
   function selectLesson(moduleIndex: number, lessonIndex: number) {
+    if (
+      getLessonOrder(moduleIndex, lessonIndex) > completedLessons.length
+    ) {
+      return;
+    }
+
     setActiveModuleIndex(moduleIndex);
     setActiveLessonIndex(lessonIndex);
     setMobileSidebarOpen(false);
   }
 
   function navigateLesson(direction: -1 | 1) {
+    if (
+      direction === 1 &&
+      activeLessonOrder >= completedLessons.length
+    ) {
+      return;
+    }
+
     const nextLessonIndex = activeLessonIndex + direction;
 
     if (
@@ -130,12 +160,16 @@ export default function Home() {
     }
   }
 
-  function toggleLessonComplete() {
-    setCompletedLessons((current) =>
-      isComplete
-        ? current.filter((id) => id !== lessonId)
-        : [...current, lessonId],
-    );
+  function markLessonComplete(score: number, total: number) {
+    saveCourseProgress({
+      completedLessons: completedLessons.includes(lessonId)
+        ? completedLessons
+        : [...completedLessons, lessonId],
+      examResults: {
+        ...courseProgress.examResults,
+        [lessonId]: { score, total },
+      },
+    });
   }
 
   function scrollToTop() {
@@ -244,6 +278,15 @@ export default function Home() {
         </div>
       </header>
 
+      {progressError && (
+        <div
+          className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-center text-sm text-amber-900"
+          role="alert"
+        >
+          {progressError}
+        </div>
+      )}
+
       <div className="flex min-h-[calc(100vh-68px)]">
         <div
           aria-hidden={!desktopSidebarOpen}
@@ -257,6 +300,7 @@ export default function Home() {
               activeLessonIndex={activeLessonIndex}
               activeModuleIndex={activeModuleIndex}
               completedLessons={completedLessons}
+              unlockedLessonCount={completedLessons.length}
               onSelectModule={(moduleIndex) =>
                 selectLesson(
                   moduleIndex,
@@ -295,6 +339,7 @@ export default function Home() {
                 activeLessonIndex={activeLessonIndex}
                 activeModuleIndex={activeModuleIndex}
                 completedLessons={completedLessons}
+                unlockedLessonCount={completedLessons.length}
                 onClose={() => setMobileSidebarOpen(false)}
                 onSelectModule={(moduleIndex) =>
                   selectLesson(
@@ -354,6 +399,7 @@ export default function Home() {
 
             <div className="mt-7 grid gap-5 lg:grid-cols-[minmax(0,1fr)_290px] lg:gap-6">
               <LessonContent
+                key={lessonId}
                 canNavigateNext={canNavigateNext}
                 canNavigatePrevious={canNavigatePrevious}
                 isComplete={isComplete}
@@ -363,7 +409,8 @@ export default function Home() {
                 moduleTitle={activeModule.title}
                 onNext={() => navigateLesson(1)}
                 onPrevious={() => navigateLesson(-1)}
-                onToggleComplete={toggleLessonComplete}
+                onComplete={markLessonComplete}
+                previousExamResult={courseProgress.examResults[lessonId]}
               />
             </div>
           </div>

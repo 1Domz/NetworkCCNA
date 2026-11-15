@@ -1,69 +1,399 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
+import { CourseSidebar } from "./components/course-sidebar";
+import { LessonContent } from "./components/lesson-content";
+import { courseModules } from "./data/course";
+
+function NetworkLogo() {
+  return (
+    <span className="flex size-9 items-center justify-center rounded-xl bg-cyan-400 text-slate-950">
+      <svg
+        aria-hidden="true"
+        className="size-5"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle cx="12" cy="5" r="2.25" fill="currentColor" />
+        <circle cx="5" cy="18" r="2.25" fill="currentColor" />
+        <circle cx="19" cy="18" r="2.25" fill="currentColor" />
+        <path
+          d="m10.9 6.9-4.8 9m7-9 4.8 9M7.3 18h9.4"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeWidth="1.5"
+        />
+      </svg>
+    </span>
+  );
+}
 
 export default function Home() {
+  const [activeModuleIndex, setActiveModuleIndex] = useState(0);
+  const [activeLessonIndex, setActiveLessonIndex] = useState(0);
+  const [completedLessons, setCompletedLessons] = useState<string[]>([]);
+  const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [mobileSidebarMounted, setMobileSidebarMounted] = useState(false);
+  const [headerHidden, setHeaderHidden] = useState(false);
+
+  const activeModule = courseModules[activeModuleIndex];
+  const activeLesson = activeModule.lessons[activeLessonIndex];
+  const lessonId = `${activeModuleIndex}-${activeLessonIndex}`;
+  const isComplete = completedLessons.includes(lessonId);
+  const totalLessons = courseModules.reduce(
+    (total, module) => total + module.lessons.length,
+    0,
+  );
+  const progress = Math.round((completedLessons.length / totalLessons) * 100);
+  const canNavigatePrevious =
+    activeModuleIndex > 0 || activeLessonIndex > 0;
+  const canNavigateNext =
+    activeModuleIndex < courseModules.length - 1 ||
+    activeLessonIndex < activeModule.lessons.length - 1;
+
+  useEffect(() => {
+    let previousScrollY = window.scrollY;
+
+    function handleScroll() {
+      const currentScrollY = window.scrollY;
+
+      if (window.innerWidth < 1024 || currentScrollY < 80) {
+        setHeaderHidden(false);
+        previousScrollY = currentScrollY;
+        return;
+      }
+
+      if (currentScrollY > previousScrollY + 4) {
+        setHeaderHidden(true);
+      } else if (currentScrollY < previousScrollY - 4) {
+        setHeaderHidden(false);
+      }
+
+      previousScrollY = currentScrollY;
+    }
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", handleScroll);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (mobileSidebarOpen || !mobileSidebarMounted) {
+      return;
+    }
+
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    const timeout = window.setTimeout(
+      () => setMobileSidebarMounted(false),
+      prefersReducedMotion ? 0 : 800,
+    );
+
+    return () => window.clearTimeout(timeout);
+  }, [mobileSidebarOpen, mobileSidebarMounted]);
+
+  function openMobileSidebar() {
+    setMobileSidebarMounted(true);
+    window.requestAnimationFrame(() => setMobileSidebarOpen(true));
+  }
+
+  function selectLesson(moduleIndex: number, lessonIndex: number) {
+    setActiveModuleIndex(moduleIndex);
+    setActiveLessonIndex(lessonIndex);
+    setMobileSidebarOpen(false);
+  }
+
+  function navigateLesson(direction: -1 | 1) {
+    const nextLessonIndex = activeLessonIndex + direction;
+
+    if (
+      nextLessonIndex >= 0 &&
+      nextLessonIndex < activeModule.lessons.length
+    ) {
+      setActiveLessonIndex(nextLessonIndex);
+      return;
+    }
+
+    const nextModuleIndex = activeModuleIndex + direction;
+    if (nextModuleIndex >= 0 && nextModuleIndex < courseModules.length) {
+      const nextModule = courseModules[nextModuleIndex];
+      setActiveModuleIndex(nextModuleIndex);
+      setActiveLessonIndex(
+        direction === 1 ? 0 : nextModule.lessons.length - 1,
+      );
+    }
+  }
+
+  function toggleLessonComplete() {
+    setCompletedLessons((current) =>
+      isComplete
+        ? current.filter((id) => id !== lessonId)
+        : [...current, lessonId],
+    );
+  }
+
+  function scrollToTop() {
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    window.scrollTo({
+      top: 0,
+      behavior: prefersReducedMotion ? "auto" : "smooth",
+    });
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="min-h-screen bg-[#f5f7fb] text-slate-900">
+      <header
+        className={`sticky top-0 z-30 flex h-[68px] items-center justify-between border-b border-slate-200/80 bg-white/95 px-4 backdrop-blur transition-[opacity,transform] duration-[1000ms] ease-in-out motion-reduce:transition-none sm:px-7 ${
+          headerHidden
+            ? "lg:pointer-events-none lg:-translate-y-full lg:opacity-0"
+            : "lg:translate-y-0 lg:opacity-100"
+        }`}
+      >
+        <div className="flex items-center gap-3">
+          <button
+            aria-label="Open course menu"
+            className="flex size-10 items-center justify-center rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 lg:hidden"
+            onClick={openMobileSidebar}
+            type="button"
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
+            <svg
+              aria-hidden="true"
+              className="size-5"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M4 6h16M4 12h16M4 18h16"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeWidth="1.8"
+              />
+            </svg>
+          </button>
+          <button
+            aria-label={
+              desktopSidebarOpen
+                ? "Hide course sidebar"
+                : "Show course sidebar"
+            }
+            className="hidden size-10 items-center justify-center rounded-xl border border-slate-200 text-slate-700 transition-colors hover:bg-slate-50 lg:flex"
+            onClick={() => setDesktopSidebarOpen((open) => !open)}
+            title={
+              desktopSidebarOpen
+                ? "Hide course sidebar"
+                : "Show course sidebar"
+            }
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              className="size-5"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <rect
+                x="3.75"
+                y="4.75"
+                width="16.5"
+                height="14.5"
+                rx="2"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              />
+              <path
+                d="M9 5v14"
+                stroke="currentColor"
+                strokeWidth="1.5"
+              />
+              <path
+                d={desktopSidebarOpen ? "M6.5 10 5 12l1.5 2" : "m6 10 2 2-2 2"}
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="1.5"
+              />
+            </svg>
+          </button>
+          <NetworkLogo />
+          <div>
+            <p className="text-sm font-bold tracking-tight text-slate-950">
+              Netpath
+            </p>
+            <p className="hidden text-[10px] font-medium uppercase tracking-[0.15em] text-slate-500 sm:block">
+              Learn networking
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-2 text-xs font-medium text-slate-600 sm:gap-2.5 sm:px-4">
+          <span className="size-2 rounded-full bg-emerald-500" />
+          <span className="hidden sm:inline">Networking foundations</span>
+          <span className="sm:hidden">Foundations</span>
+          <span aria-hidden="true" className="text-slate-300">
+            /
+          </span>
+          <span className="tabular-nums">{progress}%</span>
+        </div>
+      </header>
+
+      <div className="flex min-h-[calc(100vh-68px)]">
+        <div
+          aria-hidden={!desktopSidebarOpen}
+          className={`hidden shrink-0 overflow-hidden transition-[width,opacity] duration-[750ms] ease-in-out motion-reduce:transition-none lg:block ${
+            desktopSidebarOpen ? "w-[286px] opacity-100" : "w-0 opacity-0"
+          }`}
+          inert={!desktopSidebarOpen}
+        >
+          <div className="h-full w-[286px]">
+            <CourseSidebar
+              activeLessonIndex={activeLessonIndex}
+              activeModuleIndex={activeModuleIndex}
+              completedLessons={completedLessons}
+              onSelectModule={(moduleIndex) =>
+                selectLesson(
+                  moduleIndex,
+                  moduleIndex === activeModuleIndex
+                    ? activeLessonIndex
+                    : 0,
+                )
+              }
+              onSelectLesson={selectLesson}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          </div>
         </div>
-      </main>
+
+        {mobileSidebarMounted && (
+          <div
+            aria-hidden={!mobileSidebarOpen}
+            className={`fixed inset-0 z-40 transition-opacity duration-[750ms] ease-in-out motion-reduce:transition-none lg:hidden ${
+              mobileSidebarOpen
+                ? "opacity-100"
+                : "pointer-events-none opacity-0"
+            }`}
+            inert={!mobileSidebarOpen}
+          >
+            <button
+              aria-label="Close course menu"
+              className="absolute inset-0 bg-slate-950/50"
+              onClick={() => setMobileSidebarOpen(false)}
+              type="button"
+            />
+            <div
+              className={`relative h-full w-[min(88vw,340px)] shadow-2xl transition-transform duration-[750ms] ease-in-out motion-reduce:transition-none ${
+                mobileSidebarOpen ? "translate-x-0" : "-translate-x-full"
+              }`}
+            >
+              <CourseSidebar
+                activeLessonIndex={activeLessonIndex}
+                activeModuleIndex={activeModuleIndex}
+                completedLessons={completedLessons}
+                onClose={() => setMobileSidebarOpen(false)}
+                onSelectModule={(moduleIndex) =>
+                  selectLesson(
+                    moduleIndex,
+                    moduleIndex === activeModuleIndex
+                      ? activeLessonIndex
+                      : 0,
+                  )
+                }
+                onSelectLesson={selectLesson}
+              />
+            </div>
+          </div>
+        )}
+
+        <main className="min-w-0 flex-1 px-4 pb-12 pt-7 sm:px-7 sm:pt-9 xl:px-12">
+          <div className="mx-auto max-w-[1080px]">
+            <div className="mb-7 flex flex-wrap items-center justify-between gap-3">
+              <p className="text-xs font-medium text-slate-500">
+                <span>Learning path</span>
+                <span aria-hidden="true" className="mx-2 text-slate-300">
+                  /
+                </span>
+                <span>
+                  Module {String(activeModuleIndex + 1).padStart(2, "0")}
+                </span>
+                <span aria-hidden="true" className="mx-2 text-slate-300">
+                  /
+                </span>
+                <span>
+                  Lesson {String(activeLessonIndex + 1).padStart(2, "0")}
+                </span>
+              </p>
+              <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+                Beginner friendly
+              </span>
+            </div>
+
+            <section aria-labelledby="module-title">
+              <div className="max-w-3xl">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-700">
+                  Module {String(activeModuleIndex + 1).padStart(2, "0")}{" "}
+                  <span className="px-1 text-slate-300">/</span>{" "}
+                  {courseModules.length}
+                </p>
+                <h1
+                  className="mt-3 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl"
+                  id="module-title"
+                >
+                  {activeModule.title}
+                </h1>
+                <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
+                  {activeModule.description}
+                </p>
+              </div>
+            </section>
+
+            <div className="mt-7 grid gap-5 lg:grid-cols-[minmax(0,1fr)_290px] lg:gap-6">
+              <LessonContent
+                canNavigateNext={canNavigateNext}
+                canNavigatePrevious={canNavigatePrevious}
+                isComplete={isComplete}
+                lesson={activeLesson}
+                lessonIndex={activeLessonIndex}
+                moduleIndex={activeModuleIndex}
+                moduleTitle={activeModule.title}
+                onNext={() => navigateLesson(1)}
+                onPrevious={() => navigateLesson(-1)}
+                onToggleComplete={toggleLessonComplete}
+              />
+            </div>
+          </div>
+        </main>
+      </div>
+
+      {headerHidden && (
+        <button
+          aria-label="Scroll to top"
+          className="fixed bottom-6 right-6 z-30 hidden size-12 items-center justify-center rounded-full bg-cyan-600 text-white shadow-lg shadow-cyan-950/20 transition duration-300 hover:-translate-y-1 hover:bg-cyan-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-700 lg:flex"
+          onClick={scrollToTop}
+          title="Back to top"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            className="size-5"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M12 19V5m0 0L6 11m6-6 6 6"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="1.8"
+            />
+          </svg>
+        </button>
+      )}
     </div>
   );
 }

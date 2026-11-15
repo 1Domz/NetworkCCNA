@@ -1,4 +1,5 @@
 import { courseModules } from "./course";
+import { interfacesCableQuestions } from "./interfaces-cable-questions";
 
 export const COURSE_PROGRESS_STORAGE_KEY = "netpath-course-progress-v1";
 export const PASSING_PERCENTAGE = 90;
@@ -22,6 +23,7 @@ const allLessonIds = courseModules.flatMap((module, moduleIndex) =>
   module.lessons.map((_, lessonIndex) => `${moduleIndex}-${lessonIndex}`),
 );
 const allLessonIdSet = new Set(allLessonIds);
+const interfacesAndCablesLessonId = "0-1";
 const emptyCourseProgress: SavedCourseProgress = {
   completedLessons: [],
   examResults: {},
@@ -156,6 +158,49 @@ function readStoredProgress(): CourseProgressSnapshot {
       error:
         "Saved progress has an invalid format. Clear this site's saved data to start fresh.",
     };
+  }
+
+  const interfacesAndCablesResult =
+    parsedProgress.examResults[interfacesAndCablesLessonId];
+  if (
+    interfacesAndCablesResult &&
+    interfacesAndCablesResult.total !== interfacesCableQuestions.length
+  ) {
+    const changedLessonOrder = allLessonIds.indexOf(
+      interfacesAndCablesLessonId,
+    );
+    const completedLessons = parsedProgress.completedLessons.filter(
+      (lessonId) => allLessonIds.indexOf(lessonId) < changedLessonOrder,
+    );
+    const examResults: Record<string, LessonExamResult> = {};
+
+    for (const lessonId of completedLessons) {
+      const examResult = parsedProgress.examResults[lessonId];
+      if (!examResult) {
+        throw new Error(`Missing saved exam result for lesson ${lessonId}.`);
+      }
+      examResults[lessonId] = examResult;
+    }
+
+    const migratedProgress = { completedLessons, examResults };
+    let migrationError =
+      "The Lesson 2 exam changed, so its saved result and later lesson progress were reset. Pass the updated exam to unlock those lessons.";
+
+    try {
+      window.localStorage.setItem(
+        COURSE_PROGRESS_STORAGE_KEY,
+        JSON.stringify(migratedProgress),
+      );
+    } catch (storageError) {
+      if (!(storageError instanceof DOMException)) {
+        throw storageError;
+      }
+
+      migrationError +=
+        " The browser could not save this update, so the reset may not persist after reloading.";
+    }
+
+    return { progress: migratedProgress, error: migrationError };
   }
 
   return { progress: parsedProgress, error: null };

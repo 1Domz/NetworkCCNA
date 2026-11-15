@@ -1,4 +1,4 @@
-export type NetworkDeviceQuestion = {
+export type CourseIdentifyQuestion = {
   id: string;
   type: "identify";
   prompt: string;
@@ -10,7 +10,7 @@ export type NetworkDeviceQuestion = {
   };
 };
 
-export const networkDeviceQuestions: NetworkDeviceQuestion[] = [
+export const networkDeviceQuestions: CourseIdentifyQuestion[] = [
   {
     id: "network-nodes",
     type: "identify",

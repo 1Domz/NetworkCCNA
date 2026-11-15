@@ -39,7 +39,7 @@ export const courseModules: CourseModule[] = [
   {
     title: "Networking Fundamentals",
     description:
-      "Build a foundation in network devices, network layouts, and the models used to explain communication.",
+      "Build a foundation in network devices, Ethernet connections, and the models used to explain communication.",
     lessons: [
       {
         title: "Network devices",
@@ -134,19 +134,80 @@ export const courseModules: CourseModule[] = [
         },
       },
       {
-        title: "Network topologies",
-        duration: "6 min",
+        title: "Interfaces and cables",
+        duration: "10 min",
         summary:
-          "Topology describes how network devices and links are arranged, physically or logically.",
+          "Learn the Ethernet interface, copper, and fiber basics that let network devices connect and exchange data.",
         keyConcept:
-          "The chosen layout affects how devices communicate, how the network can grow, and how failures affect service.",
+          "Ethernet standards define link speeds and media; the right copper or fiber cable depends on the interfaces, distance, and environment.",
         objectives: [
-          "Compare common star, mesh, and point-to-point layouts.",
-          "Distinguish a physical topology from a logical topology.",
+          "Identify common Ethernet rates, RJ45 interfaces, and copper cable types.",
+          "Explain when straight-through, crossover, or fiber connections are used.",
+          "Compare multimode and single-mode fiber at a high level.",
         ],
-        term: "Topology",
+        term: "Auto MDI-X",
         definition:
-          "The physical or logical arrangement of devices and connections in a network.",
+          "An Ethernet feature that automatically detects and adjusts transmit and receive pair assignments on a copper link.",
+        notes: {
+          heading: "Interfaces and cables",
+          introduction:
+            "An interface is the point where a device connects to a network. Ethernet links use copper or fiber, and each physical connection must match the interface, signaling standard, and required distance. The notes below summarize the main ideas from Jeremy's IT Lab Day 2 lesson.",
+          reference: {
+            label: "Jeremy's IT Lab — Free CCNA: Interfaces and Cables (Day 2)",
+            url: "https://www.youtube.com/watch?v=ieTH5lVhNaY&list=PLxbwE86jKRgMpuZuLBivzlM8s2Dk5lXBQ&index=4",
+          },
+          sections: [
+            {
+              title: "Ethernet interfaces and rates",
+              paragraphs: [
+                "A common copper Ethernet cable has an eight-contact RJ45 plug at each end. Ethernet link speeds are measured in bits per second (bps), not bytes per second. One byte contains eight bits; networking rate prefixes such as kilo, mega, giga, and tera use decimal multiples.",
+                "The IEEE 802.3 standards describe Ethernet. Names such as 1000BASE-T indicate a nominal rate of 1000 megabits per second and the physical medium or signaling method. Copper twisted-pair Ethernet commonly supports channel lengths up to 100 meters when the cable and installation meet the required category.",
+              ],
+              points: [
+                "Common rates include 10 Mbps, 100 Mbps, 1 Gbps, and 10 Gbps.",
+                "10BASE-T and 100BASE-T use two wire pairs; 1000BASE-T and 10GBASE-T use all four pairs.",
+                "Actual throughput can be lower than a link's nominal rate because of protocol overhead and other conditions.",
+              ],
+            },
+            {
+              title: "UTP copper cable",
+              paragraphs: [
+                "Unshielded twisted-pair (UTP) cable contains pairs of insulated copper wires twisted together. The twists help reduce electromagnetic interference and crosstalk between pairs. Copper is practical and widely used for short device-to-switch connections, but its performance depends on cable quality, installation, and distance.",
+                "For 10BASE-T and 100BASE-T, the transmit and receive data pairs use pins 1-2 and 3-6. Gigabit and faster twisted-pair Ethernet use all four pairs. Because copper carries electrical signals, it can be more affected by electromagnetic interference than fiber and may emit signals outside the cable.",
+              ],
+              points: [
+                "Use the cable category required by the Ethernet speed and installation.",
+                "Keep copper runs within the standard's channel-length limit and away from strong interference sources where practical.",
+                "A link's performance depends on both end interfaces and the cable between them.",
+              ],
+            },
+            {
+              title: "Straight-through, crossover, and Auto MDI-X",
+              paragraphs: [
+                "Historically, a straight-through cable kept the same pin assignment at both ends and was used between unlike Ethernet interfaces, such as a PC and a switch. A crossover cable swapped the transmit and receive pair assignments and was traditionally used between like interfaces, such as two switches.",
+                "Auto MDI-X detects the needed transmit and receive arrangement automatically, so compatible modern interfaces can generally establish a link without choosing a cable based on device type. Always follow the device and course requirements, especially when working with older equipment or fixed-speed lab scenarios.",
+              ],
+              points: [
+                "Without Auto MDI-X, PC-to-switch and router-to-switch links traditionally use straight-through cables.",
+                "Without Auto MDI-X, switch-to-switch and router-to-router links traditionally use crossover cables.",
+                "Fast Ethernet device roles traditionally determine transmit and receive pins; gigabit links use all four pairs.",
+              ],
+            },
+            {
+              title: "Fiber-optic connections",
+              paragraphs: [
+                "Fiber carries data as light and is useful for longer links, high bandwidth, and environments where electrical interference is a concern. Switches and routers often use a removable SFP-family transceiver to connect the interface to the selected fiber type and wavelength.",
+                "Multimode fiber has a larger core and supports multiple light paths; it is commonly used for shorter building links. Single-mode fiber has a much smaller core and is commonly selected for longer distances. A transceiver's specification, fiber type, wavelength, and link budget determine the supported range, so check the hardware documentation rather than assuming every optic reaches the same distance.",
+              ],
+              points: [
+                "10GBASE-SR is a short-reach multimode optic; supported distance varies with the multimode fiber grade.",
+                "10GBASE-LR is specified for links up to 10 km over single-mode fiber.",
+                "10GBASE-ER is commonly specified for up to 40 km over single-mode fiber; confirm the exact transceiver and fiber requirements.",
+                "1000BASE-LX typically supports longer distances on single-mode fiber than on multimode fiber.",
+              ],
+            },
+          ],
+        },
       },
       {
         title: "The OSI reference model",

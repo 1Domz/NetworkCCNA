@@ -11,8 +11,9 @@ import {
 import { courseModules } from "../data/course";
 import {
   networkDeviceQuestions,
-  type NetworkDeviceQuestion,
+  type CourseIdentifyQuestion,
 } from "../data/network-device-questions";
+import { interfacesCableQuestions } from "../data/interfaces-cable-questions";
 
 type FlashcardQuestion = {
   id: string;
@@ -21,7 +22,7 @@ type FlashcardQuestion = {
   answer: string;
 };
 
-type IdentifyQuestion = NetworkDeviceQuestion;
+type IdentifyQuestion = CourseIdentifyQuestion;
 
 type MultipleChoiceQuestion = {
   id: string;
@@ -77,6 +78,10 @@ function isIdentifyAnswerCorrect(
 function createQuestions(lesson: CourseLesson): QuizQuestion[] {
   if (lesson.title === "Network devices") {
     return shuffle(networkDeviceQuestions);
+  }
+
+  if (lesson.title === "Interfaces and cables") {
+    return shuffle(interfacesCableQuestions);
   }
 
   const otherLessons = courseModules

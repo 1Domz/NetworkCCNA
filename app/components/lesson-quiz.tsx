@@ -14,6 +14,21 @@ import {
   type CourseIdentifyQuestion,
 } from "../data/network-device-questions";
 import { interfacesCableQuestions } from "../data/interfaces-cable-questions";
+import { tcpIpQuestions } from "../data/tcp-ip-questions";
+import { cliQuestions } from "../data/cli-questions";
+import {
+  arpSwitchingQuestions,
+  ethernetFrameQuestions,
+} from "../data/ethernet-switching-questions";
+import {
+  ipv4AddressPartOneQuestions,
+  ipv4AddressPartTwoQuestions,
+} from "../data/ipv4-address-questions";
+import {
+  ipv4HeaderQuestions,
+  switchInterfaceQuestions,
+} from "../data/interface-ipv4-header-questions";
+import { routingQuestions } from "../data/routing-questions";
 
 type FlashcardQuestion = {
   id: string;
@@ -82,6 +97,37 @@ function createQuestions(lesson: CourseLesson): QuizQuestion[] {
 
   if (lesson.title === "Interfaces and cables") {
     return shuffle(interfacesCableQuestions);
+  }
+
+  if (lesson.title === "TCP/IP and encapsulation") {
+    return shuffle(tcpIpQuestions);
+  }
+
+  if (lesson.title === "Intro to the CLI") {
+    return shuffle(cliQuestions);
+  }
+
+  if (lesson.title === "Ethernet LAN Switching") {
+    return shuffle([...ethernetFrameQuestions, ...arpSwitchingQuestions]);
+  }
+
+  if (lesson.title === "IPv4 Addressing") {
+    return shuffle([
+      ...ipv4AddressPartOneQuestions,
+      ...ipv4AddressPartTwoQuestions,
+    ]);
+  }
+
+  if (lesson.title === "Switch Interfaces") {
+    return shuffle(switchInterfaceQuestions);
+  }
+
+  if (lesson.title === "IPv4 Header") {
+    return shuffle(ipv4HeaderQuestions);
+  }
+
+  if (lesson.title === "Routing Fundamentals and Static Routes") {
+    return shuffle(routingQuestions);
   }
 
   const otherLessons = courseModules

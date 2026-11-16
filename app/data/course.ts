@@ -1,3 +1,5 @@
+import { buildGroupedCourseModules } from "./course-groups";
+
 export type CourseLesson = {
   title: string;
   duration: string;
@@ -16,6 +18,10 @@ export type LessonNotes = {
     label: string;
     url: string;
   };
+  references?: {
+    label: string;
+    url: string;
+  }[];
   layers?: {
     name: string;
     responsibility: string;
@@ -35,7 +41,7 @@ export type CourseModule = {
   lessons: CourseLesson[];
 };
 
-export const courseModules: CourseModule[] = [
+const sourceCourseModules: CourseModule[] = [
   {
     title: "Networking Fundamentals",
     description:
@@ -61,7 +67,7 @@ export const courseModules: CourseModule[] = [
             "A computer network is two or more connected nodes that can exchange information or share resources. Devices connect with cables or wirelessly. End hosts create or use information; intermediary devices connect devices and networks and help traffic reach its destination.",
           reference: {
             label: "Jeremy's IT Lab — Free CCNA: Network Devices (Day 1)",
-            url: "https://www.youtube.com/watch?v=H8W9oMNSuwo&list=PLxbwE86jKRgMpuZuLBivzlM8s2Dk5lXBQ&index=1",
+            url: "https://www.youtube.com/watch?v=H8W9oMNSuwo",
           },
           sections: [
             {
@@ -154,7 +160,7 @@ export const courseModules: CourseModule[] = [
             "An interface is the point where a device connects to a network. Ethernet links use copper or fiber, and each physical connection must match the interface, signaling standard, and required distance. The notes below summarize the main ideas from Jeremy's IT Lab Day 2 lesson.",
           reference: {
             label: "Jeremy's IT Lab — Free CCNA: Interfaces and Cables (Day 2)",
-            url: "https://www.youtube.com/watch?v=ieTH5lVhNaY&list=PLxbwE86jKRgMpuZuLBivzlM8s2Dk5lXBQ&index=4",
+            url: "https://www.youtube.com/watch?v=ieTH5lVhNaY",
           },
           sections: [
             {
@@ -210,29 +216,15 @@ export const courseModules: CourseModule[] = [
         },
       },
       {
-        title: "The OSI reference model",
-        duration: "8 min",
-        summary:
-          "The seven-layer OSI model provides a shared framework for describing networking functions and diagnosing problems.",
-        keyConcept:
-          "Each layer has a distinct role, from transmitting signals at the physical layer to supporting applications at the top.",
-        objectives: [
-          "Name the seven OSI layers in order.",
-          "Use the layers to describe where a network function or fault may occur.",
-        ],
-        term: "Encapsulation",
-        definition:
-          "The process of adding protocol information as data moves down the network layers.",
-      },
-      {
         title: "TCP/IP and encapsulation",
-        duration: "8 min",
+        duration: "15 min",
         summary:
-          "The TCP/IP model describes the protocol layers used for communication across modern IP networks.",
+          "Explore the TCP/IP layers, Internet standards, protocol data units, and how encapsulation carries data across networks.",
         keyConcept:
           "Application data is packaged with transport, IP, and link-layer information as it travels toward its destination.",
         objectives: [
-          "Recognize the TCP/IP model's main layers.",
+          "Recognize the TCP/IP layers and the responsibilities of each.",
+          "Identify the PDU and payload terms used at different layers.",
           "Describe how data is encapsulated and decapsulated.",
         ],
         term: "Protocol",
@@ -241,6 +233,10 @@ export const courseModules: CourseModule[] = [
         notes: {
           introduction:
             "The TCP/IP model organizes network communication into layers with distinct responsibilities. Each layer uses the service below it and provides a service to the layer above it. This lesson uses the common five-layer teaching view.",
+          reference: {
+            label: "Jeremy's IT Lab — How the TCP/IP Model Actually Works (Day 3)",
+            url: "https://www.youtube.com/watch?v=yM-XNq9ADlI",
+          },
           layers: [
             {
               name: "Application",
@@ -352,124 +348,448 @@ export const courseModules: CourseModule[] = [
           ],
         },
       },
+      {
+        title: "Intro to the CLI",
+        duration: "12 min",
+        summary:
+          "Connect to Cisco devices through the console, navigate IOS command modes, inspect configurations, and save changes safely.",
+        keyConcept:
+          "Cisco IOS separates user, privileged, and configuration modes; save the running configuration to startup-config to preserve changes after a restart.",
+        objectives: [
+          "Recognize common console settings and Cisco IOS prompt modes.",
+          "Use help, show, configuration, and save commands at the appropriate prompt.",
+          "Distinguish password obfuscation from stronger secret hashing.",
+        ],
+        term: "Privileged EXEC mode",
+        definition:
+          "Cisco IOS command mode, entered with enable, that provides access to privileged monitoring and configuration commands.",
+        notes: {
+          heading: "Intro to the CLI",
+          introduction:
+            "The command-line interface (CLI) lets an administrator inspect and configure a Cisco device. A console connection provides local management access, while IOS modes control which commands are available.",
+          reference: {
+            label: "Jeremy's IT Lab — Free CCNA course playlist",
+            url: "https://www.youtube.com/playlist?list=PLxbwE86jKRgMpuZuLBivzlM8s2Dk5lXBQ",
+          },
+          sections: [
+            {
+              title: "Connect through the console",
+              paragraphs: [
+                "Cisco devices commonly provide a USB console port, an RJ-45 console port, or both. An RJ-45 console connection traditionally uses a rollover cable and terminal-emulator software.",
+                "A common default terminal profile is 9600 bits per second, 8 data bits, no parity, 1 stop bit, and no flow control (9600 8N1). The device or lab instructions may specify different settings.",
+              ],
+              points: [
+                "Console access is useful before a network interface has been configured.",
+                "The console is a management connection, not an Ethernet data link.",
+              ],
+            },
+            {
+              title: "Navigate IOS command modes",
+              paragraphs: [
+                "User EXEC mode is the initial, limited prompt and typically ends in >. Enter enable to reach privileged EXEC mode, whose prompt ends in #. From privileged EXEC mode, configure terminal enters global configuration mode, shown with (config)#.",
+                "Use ? to request context-sensitive help. The exit command leaves the current mode. From configuration mode, the do keyword runs an EXEC command such as do show running-config without leaving configuration mode.",
+              ],
+              points: [
+                "User EXEC: Router>",
+                "Privileged EXEC: Router#",
+                "Global configuration: Router(config)#",
+                "Use no before a configuration command to negate or remove that setting.",
+              ],
+            },
+            {
+              title: "View and save configuration",
+              paragraphs: [
+                "The running-config is the active configuration in memory. The startup-config is the saved configuration loaded when the device boots. Changes to the running configuration do not automatically become the startup configuration.",
+                "Use show running-config and show startup-config to inspect them. To preserve current changes across a restart, copy running-config startup-config is the explicit command; write memory and write are common IOS shortcuts.",
+              ],
+            },
+            {
+              title: "Protect privileged access",
+              paragraphs: [
+                "Use enable secret to configure the privileged EXEC secret; on classic IOS this is stored using a one-way hash rather than as plaintext. The older enable password command is less secure and should not be preferred when enable secret is available.",
+                "The service password-encryption command applies reversible type 7 obfuscation to eligible plaintext passwords. It is not strong encryption. Removing the command does not automatically turn existing type 7 strings back into plaintext.",
+              ],
+              points: [
+                "Treat type 7 as obfuscation, not a secure password-storage method.",
+                "Classic IOS commonly identifies the legacy MD5-based enable secret as type 5; newer platforms may support stronger hash types.",
+              ],
+            },
+          ],
+        },
+      },
     ],
   },
   {
-    title: "Ethernet & Switching",
+    title: "Ethernet & IPv4 Foundations",
     description:
-      "Learn how local Ethernet networks carry frames and how switches organize and forward LAN traffic.",
+      "Learn Ethernet frame and switching fundamentals, then build a foundation in IPv4 addressing.",
     lessons: [
       {
-        title: "Ethernet frames",
-        duration: "7 min",
+        title: "Ethernet LAN Switching (Part 1)",
+        duration: "15 min",
         summary:
-          "Ethernet defines common wired LAN communication, including frame structure and link behavior.",
+          "Study Ethernet frame fields, MAC addressing, EtherTypes, and how switches learn and forward traffic.",
         keyConcept:
-          "A frame carries a payload and link-layer addressing information across a local network segment.",
+          "Switches learn source MAC addresses and use the destination address to forward known traffic, flooding unknown unicast frames within the VLAN.",
         objectives: [
-          "Describe the purpose of an Ethernet frame.",
-          "Distinguish a frame from an IP packet.",
-        ],
-        term: "Frame",
-        definition:
-          "A data-link layer unit used to deliver information across a local network link.",
-      },
-      {
-        title: "MAC addresses and switching",
-        duration: "8 min",
-        summary:
-          "Switches learn source MAC addresses and use their address tables to forward frames within a LAN.",
-        keyConcept:
-          "A switch forwards known unicast traffic toward the port associated with the destination MAC address.",
-        objectives: [
-          "Explain how a switch learns MAC addresses.",
-          "Describe what happens when the destination address is unknown.",
+          "Recognize Ethernet frame fields, sizes, and common EtherType values.",
+          "Explain MAC address structure and hexadecimal notation.",
+          "Describe source learning, forwarding, flooding, and MAC aging.",
         ],
         term: "MAC address",
         definition:
-          "A link-layer address used to identify a network interface on a local network.",
+          "A 48-bit link-layer address used to identify an Ethernet interface on a local network.",
+        notes: {
+          heading: "Ethernet LAN Switching (Part 1)",
+          introduction:
+            "Ethernet frames carry data over a local link. Switches examine their Layer 2 headers to learn where devices are located and to forward traffic within a VLAN.",
+          reference: {
+            label: "Jeremy's IT Lab — Free CCNA course playlist",
+            url: "https://www.youtube.com/playlist?list=PLxbwE86jKRgMpuZuLBivzlM8s2Dk5lXBQ",
+          },
+          sections: [
+            {
+              title: "Ethernet frame structure",
+              paragraphs: [
+                "The preamble (7 bytes) helps synchronize reception, followed by the 1-byte Start Frame Delimiter (SFD). The header then contains destination MAC, source MAC, and a 2-byte Type/Length field. A 4-byte Frame Check Sequence (FCS) is carried in the trailer.",
+                "The preamble and SFD are transmitted before the frame itself. Excluding them, the Ethernet header and FCS total 18 bytes. The FCS uses a cyclic redundancy check (CRC) to help detect corruption.",
+              ],
+              points: [
+                "Preamble: 10101010 repeated; SFD: 10101011.",
+                "The Type/Length field values up to 1500 represent length; values from 1536 identify an EtherType.",
+                "IPv4 uses EtherType 0x0800; IPv6 uses 0x86DD.",
+              ],
+            },
+            {
+              title: "MAC addresses and hexadecimal",
+              paragraphs: [
+                "A standard Ethernet MAC address is 48 bits (6 bytes), usually written as 12 hexadecimal digits. The first 3 bytes are the Organizationally Unique Identifier (OUI). A factory-assigned address is also called a burned-in address (BIA).",
+                "Hexadecimal digits represent values from 0 through 15: A is 10, B is 11, C is 12, D is 13, E is 14, and F is 15. A unicast destination identifies one interface.",
+              ],
+            },
+            {
+              title: "How switches learn and forward",
+              paragraphs: [
+                "A switch learns a source MAC address and the interface where it arrived, adding or refreshing a dynamic entry in its MAC address table. It then checks the destination MAC to decide where to forward the frame.",
+                "For a known destination, the switch forwards toward the learned interface. When a unicast destination is unknown, it floods the frame out other forwarding ports in the same VLAN, except the port where it arrived. Dynamic entries commonly age out after five minutes of inactivity.",
+              ],
+              points: [
+                "show mac address-table displays learned entries.",
+                "clear mac address-table dynamic clears dynamic entries.",
+              ],
+            },
+          ],
+        },
       },
       {
-        title: "VLANs",
-        duration: "8 min",
+        title: "Ethernet LAN Switching (Part 2)",
+        duration: "10 min",
         summary:
-          "Virtual LANs divide a switched network into separate logical broadcast domains.",
+          "Review Ethernet frame sizing, ARP, the ARP cache, and useful switch commands for inspecting or clearing learned entries.",
         keyConcept:
-          "Devices in different VLANs need a Layer 3 device to communicate with one another.",
+          "ARP resolves local IPv4 addresses to MAC addresses; requests are normally broadcast and replies are normally unicast.",
         objectives: [
-          "Explain why networks use VLANs.",
-          "Recognize access ports and VLAN membership.",
+          "Recall Ethernet minimum frame and payload sizes.",
+          "Describe an ARP request/reply exchange and recognize its broadcast address.",
+          "Use commands to inspect or clear ARP and MAC address tables.",
         ],
-        term: "VLAN",
+        term: "ARP",
         definition:
-          "A logical Layer 2 network that separates broadcast traffic on a switched network.",
+          "A protocol that discovers the MAC address associated with an IPv4 address on the local link.",
+        notes: {
+          heading: "Ethernet LAN Switching (Part 2)",
+          introduction:
+            "Ethernet relies on local-link addressing to deliver frames. ARP lets an IPv4 host discover the destination MAC address it needs before sending traffic on the LAN.",
+          reference: {
+            label: "Jeremy's IT Lab — Free CCNA course playlist",
+            url: "https://www.youtube.com/playlist?list=PLxbwE86jKRgMpuZuLBivzlM8s2Dk5lXBQ",
+          },
+          sections: [
+            {
+              title: "Frame size and ARP",
+              paragraphs: [
+                "A standard Ethernet frame is at least 64 bytes, including its 14-byte header and 4-byte FCS. With an 18-byte header-plus-trailer, the minimum payload is 46 bytes. These sizes exclude the preamble and SFD.",
+                "When a host knows a local IPv4 destination but not its MAC address, it sends an ARP request in a broadcast frame. The device using that IPv4 address normally responds with a unicast ARP reply. The Ethernet broadcast address is FF:FF:FF:FF:FF:FF, and ARP uses EtherType 0x0806.",
+              ],
+              points: [
+                "ARP request: broadcast to discover a local IPv4-to-MAC mapping.",
+                "ARP reply: normally unicast back to the requester.",
+                "Ping uses ICMP Echo Request and Echo Reply messages.",
+              ],
+            },
+            {
+              title: "Inspect address tables",
+              paragraphs: [
+                "Hosts cache recently learned neighbor mappings. Use arp -a on Windows, macOS, or Linux to display the host's ARP cache. On Cisco IOS, show arp displays the ARP table.",
+                "On a Cisco switch, show mac address-table displays learned Layer 2 entries. Dynamic entries can be cleared globally or by address or interface; they are also removed through aging after inactivity.",
+              ],
+              points: [
+                "show mac address-table",
+                "clear mac address-table dynamic",
+                "clear mac address-table dynamic address <mac-address>",
+                "clear mac address-table dynamic interface <interface-id>",
+              ],
+            },
+          ],
+        },
       },
       {
-        title: "Trunks and inter-VLAN routing",
-        duration: "9 min",
+        title: "IPv4 Addresses (Part 1)",
+        duration: "12 min",
         summary:
-          "Trunk links carry multiple VLANs between network devices, while routing enables communication between VLANs.",
+          "Review IPv4 address structure, historical address classes, loopback, and the relationship between prefixes and masks.",
         keyConcept:
-          "IEEE 802.1Q tags identify VLAN traffic on a trunk; a router or Layer 3 switch routes between subnets.",
+          "IPv4 is a 32-bit address divided into a network prefix and host bits; CIDR replaced the historical classful boundaries.",
         objectives: [
-          "Describe the purpose of an 802.1Q trunk.",
-          "Compare router-on-a-stick with Layer 3 switching.",
+          "Convert between IPv4 octets and their basic binary ranges.",
+          "Recognize historical address classes and special-use ranges.",
+          "Relate classful default prefixes to subnet masks.",
         ],
-        term: "802.1Q",
+        term: "Octet",
         definition:
-          "The Ethernet standard commonly used to identify VLAN traffic on trunk links.",
+          "An 8-bit group used to represent one of the four decimal sections of an IPv4 address.",
+        notes: {
+          heading: "IPv4 Addresses (Part 1)",
+          introduction:
+            "An IPv4 address contains 32 bits, written as four 8-bit octets in dotted-decimal form. Historical classful rules classified addresses by their first bits, but modern networks use classless prefixes.",
+          reference: {
+            label: "Jeremy's IT Lab — Free CCNA course playlist",
+            url: "https://www.youtube.com/playlist?list=PLxbwE86jKRgMpuZuLBivzlM8s2Dk5lXBQ",
+          },
+          sections: [
+            {
+              title: "IPv4 addresses and octets",
+              paragraphs: [
+                "Each IPv4 address has four octets and is 32 bits long. An 8-bit octet ranges from 0 to 255; for example, eight 1 bits equal 255.",
+                "The network prefix identifies the subnet, while the remaining host bits identify addresses within it. When all host bits are zero, the value is the network address; when all host bits are one, it is the subnet broadcast address.",
+              ],
+            },
+            {
+              title: "Historical address classes",
+              paragraphs: [
+                "Class A, B, and C were historically identified by leading-bit patterns 0, 10, and 110, with first-octet ranges 0–127, 128–191, and 192–223. Their traditional default prefixes were /8, /16, and /24.",
+                "Class D (224–239) is used for multicast, while Class E (240–255) is reserved for experimental purposes. The 127.0.0.0/8 range is used for loopback testing on the local device.",
+              ],
+              points: [
+                "Class A default mask: 255.0.0.0 (/8).",
+                "Class B default mask: 255.255.0.0 (/16).",
+                "Class C default mask: 255.255.255.0 (/24).",
+                "Classful addressing is obsolete; CIDR allows more flexible prefix lengths.",
+              ],
+            },
+          ],
+        },
+      },
+      {
+        title: "IPv4 Addresses (Part 2)",
+        duration: "13 min",
+        summary:
+          "Calculate typical host capacity and learn to inspect interface state, assign an address, and label interfaces in IOS.",
+        keyConcept:
+          "Interface state combines physical and line-protocol status; an interface must be configured and enabled for network-layer communication.",
+        objectives: [
+          "Calculate typical usable hosts from a subnet's host-bit count.",
+          "Interpret the Status and Protocol columns in show ip interface brief.",
+          "Configure an interface address and description.",
+        ],
+        term: "Administratively down",
+        definition:
+          "An interface state indicating that it has been disabled by configuration rather than being physically disconnected.",
+        notes: {
+          heading: "IPv4 Addresses (Part 2)",
+          introduction:
+            "IPv4 addressing works together with interface configuration. A device needs an address and mask on the correct interface, and that interface must be operational for the address to be useful.",
+          reference: {
+            label: "Jeremy's IT Lab — Free CCNA course playlist",
+            url: "https://www.youtube.com/playlist?list=PLxbwE86jKRgMpuZuLBivzlM8s2Dk5lXBQ",
+          },
+          sections: [
+            {
+              title: "Estimate subnet capacity",
+              paragraphs: [
+                "For a typical IPv4 subnet, the host capacity is 2^h - 2, where h is the number of host bits. The subtraction excludes the network and broadcast addresses; special prefixes such as /31 and /32 have distinct uses.",
+                "With classful defaults, /8 has 24 host bits, /16 has 16, and /24 has 8. This yields 16,777,214, 65,534, and 254 typical usable host addresses, respectively. CIDR replaced fixed classful allocation in modern networks.",
+              ],
+            },
+            {
+              title: "Read interface state",
+              paragraphs: [
+                "show ip interface brief gives a compact status summary. Status reflects the physical Layer 1 condition; Protocol reflects the Layer 2 line-protocol condition. An interface configured with shutdown is reported as administratively down.",
+                "Many router interfaces are disabled by default and must be enabled with no shutdown. Cisco switch access ports are typically enabled by default, though configuration and platform behavior should always be checked.",
+              ],
+            },
+            {
+              title: "Configure and describe an interface",
+              paragraphs: [
+                "From interface configuration mode, use ip address <address> <subnet-mask> to assign an IPv4 address. The description command adds a human-readable label that can document the connected device or purpose.",
+              ],
+              points: [
+                "show interfaces description lists configured interface descriptions.",
+                "Check both Status and Protocol when diagnosing an interface that is not working.",
+              ],
+            },
+          ],
+        },
       },
     ],
   },
   {
-    title: "IPv4 Addressing & Subnetting",
+    title: "IPv4 & Device Interfaces",
     description:
-      "Understand IPv4 addresses, prefixes, and the process of dividing address space into subnets.",
+      "Configure and inspect network interfaces, and understand the key fields in an IPv4 packet.",
     lessons: [
       {
-        title: "IPv4 address structure",
-        duration: "7 min",
+        title: "Switch Interfaces",
+        duration: "12 min",
         summary:
-          "IPv4 uses 32-bit addresses, usually written as four decimal octets, to identify network interfaces.",
+          "Configure interface speed and duplex, understand hubs and collision domains, and interpret common Ethernet error counters.",
         keyConcept:
-          "An IPv4 prefix identifies the network portion of an address; the remaining bits identify hosts within that subnet.",
+          "Duplex settings determine whether an interface can send and receive simultaneously; hubs share a collision domain, while switches separate collision domains by port.",
         objectives: [
-          "Read an IPv4 address in dotted-decimal notation.",
-          "Explain the network and host portions of an address.",
+          "Recognize default interface settings and configure speed or duplex.",
+          "Explain collision domains and CSMA/CD in the context of hubs.",
+          "Interpret common interface error counters.",
         ],
-        term: "IPv4 address",
+        term: "Full duplex",
         definition:
-          "A 32-bit logical address assigned to an interface on an IPv4 network.",
+          "An interface mode that allows transmission and reception at the same time.",
+        notes: {
+          heading: "Switch Interfaces",
+          introduction:
+            "Ethernet interface settings affect link operation and troubleshooting. Modern switch links commonly negotiate speed and duplex automatically, while older or shared-media scenarios help explain collisions and error counters.",
+          reference: {
+            label: "Jeremy's IT Lab — Free CCNA course playlist",
+            url: "https://www.youtube.com/playlist?list=PLxbwE86jKRgMpuZuLBivzlM8s2Dk5lXBQ",
+          },
+          sections: [
+            {
+              title: "Interface state and negotiation",
+              paragraphs: [
+                "Many router interfaces begin administratively down/down; switch ports are commonly enabled and show up/up when connected to an active device or down/down when no link is present. Verify the actual device and configuration rather than assuming defaults.",
+                "Ethernet interfaces commonly use automatic speed and duplex negotiation. The speed and duplex interface commands can set fixed values, and interface range applies configuration to multiple ports.",
+              ],
+            },
+            {
+              title: "Duplex, hubs, and collisions",
+              paragraphs: [
+                "Full duplex supports simultaneous transmission and reception. Half duplex does not. A traditional hub operates at OSI Layer 1, repeats signals to all ports, and places connected devices in the same collision domain; hub-connected Ethernet uses half duplex and CSMA/CD.",
+                "A switch creates a separate collision domain for each port, allowing full-duplex links when both ends support and agree on the mode.",
+              ],
+              points: [
+                "CSMA/CD means Carrier Sense Multiple Access with Collision Detection.",
+                "A duplex mismatch can cause performance problems and interface errors.",
+              ],
+            },
+            {
+              title: "Read interface error counters",
+              paragraphs: [
+                "The show interfaces output includes counters that help narrow down physical and link problems. Runts are undersized frames, giants are oversized frames, and CRC errors indicate received frames that failed the FCS check. Frame errors indicate malformed frames.",
+                "Input errors summarize several receive-side errors; output errors count transmit-side failures. Consider cabling, negotiation, and the connected device when interpreting these counters.",
+              ],
+            },
+          ],
+        },
       },
       {
-        title: "Subnet masks and CIDR",
-        duration: "8 min",
+        title: "IPv4 Header",
+        duration: "14 min",
         summary:
-          "A subnet mask or CIDR prefix length identifies which bits in an IPv4 address belong to the network.",
+          "Read the IPv4 header fields that describe packet length, fragmentation, lifetime, service handling, and the encapsulated protocol.",
         keyConcept:
-          "A prefix such as /24 means the first 24 bits identify the network, leaving the remaining bits for host addressing.",
+          "Routers use IPv4 header information such as destination address, TTL, and fragmentation flags to forward or process packets.",
         objectives: [
-          "Interpret CIDR prefix notation.",
-          "Relate a prefix length to a subnet mask.",
+          "Identify the main IPv4 header fields and their purposes.",
+          "Explain the role of MTU, fragmentation, and TTL.",
+          "Recognize protocol numbers for TCP, UDP, ICMP, and OSPF.",
         ],
-        term: "CIDR prefix",
+        term: "Time to Live (TTL)",
         definition:
-          "The number of leading bits used to identify a network, written after a slash.",
+          "An IPv4 header field that is decremented by routers to limit packet lifetime and prevent routing loops.",
+        notes: {
+          heading: "IPv4 Header",
+          introduction:
+            "An IPv4 packet carries a variable-length header followed by its payload. The header includes addressing and control information used by routers and receiving hosts.",
+          reference: {
+            label: "Jeremy's IT Lab — Free CCNA course playlist",
+            url: "https://www.youtube.com/playlist?list=PLxbwE86jKRgMpuZuLBivzlM8s2Dk5lXBQ",
+          },
+          sections: [
+            {
+              title: "Header length and service fields",
+              paragraphs: [
+                "The Version field identifies IPv4 with value 4. Internet Header Length (IHL) counts 4-byte words: a minimum value of 5 means a 20-byte header, and the maximum value of 15 allows a 60-byte header including options.",
+                "The differentiated-services field contains a 6-bit DSCP value used for per-hop traffic treatment and a 2-bit ECN value that can signal congestion. Total Length is 16 bits and includes the IPv4 header and data; its range is 20 through 65,535 bytes.",
+              ],
+            },
+            {
+              title: "Fragmentation and MTU",
+              paragraphs: [
+                "The Identification field groups fragments from the same original packet. The Flags field includes a reserved bit, Don't Fragment (DF), and More Fragments (MF). Fragment Offset locates a fragment within the original packet.",
+                "A packet larger than an outgoing link's Maximum Transmission Unit (MTU) may be fragmented if allowed; if DF is set, a router cannot fragment it and may discard it while reporting the problem. A common Ethernet IP MTU is 1500 bytes.",
+              ],
+            },
+            {
+              title: "Lifetime, protocol, and addressing",
+              paragraphs: [
+                "Time to Live (TTL) is an 8-bit field decremented by routers. A packet is discarded when its TTL reaches zero, preventing it from circulating indefinitely. An initial value of 64 is common but is not a universal requirement.",
+                "The Protocol field identifies the encapsulated payload: TCP is 6, UDP is 17, ICMP is 1, and OSPF is 89. Source and destination IPv4 address fields are each 32 bits. The Header Checksum detects errors in the IPv4 header; it does not protect the payload.",
+              ],
+            },
+          ],
+        },
       },
       {
-        title: "Subnetting and host ranges",
-        duration: "10 min",
+        title: "Routing Fundamentals and Static Routes",
+        duration: "16 min",
         summary:
-          "Subnetting divides an address block into smaller networks sized for different groups of devices.",
+          "Read a routing table, compare connected, local, static, and dynamic routes, and configure a basic static or default route.",
         keyConcept:
-          "The prefix length determines the size of a subnet and how many addresses are available for hosts.",
+          "Routers forward using the most specific matching route; static routes are configured manually and a default route matches otherwise-unmatched destinations.",
         objectives: [
-          "Find a subnet's network and broadcast addresses.",
-          "Determine the usable host range for common subnet sizes.",
+          "Interpret common route codes and identify next hops.",
+          "Explain longest-prefix matching and what happens when no route matches.",
+          "Recognize static-route and default-route command formats.",
         ],
-        term: "Subnet",
+        term: "Longest-prefix match",
         definition:
-          "A logical subdivision of an IP network that shares a common network prefix.",
+          "The route-selection rule that prefers the matching route with the greatest number of leading network bits.",
+        notes: {
+          heading: "Routing Fundamentals and Static Routes",
+          introduction:
+            "Routers use routing tables to select a next hop for each packet. Routes can be connected, local, static, or learned dynamically, and the most specific matching destination prefix wins.",
+          reference: {
+            label: "Jeremy's IT Lab — Free CCNA course playlist",
+            url: "https://www.youtube.com/playlist?list=PLxbwE86jKRgMpuZuLBivzlM8s2Dk5lXBQ",
+          },
+          sections: [
+            {
+              title: "Read a routing table",
+              paragraphs: [
+                "Use show ip route to display the IPv4 routing table. Connected routes represent directly attached networks and are marked C; local routes represent the router's own interface addresses and are marked L. A local route uses a /32 prefix, while a connected route uses the interface's subnet prefix.",
+                "When an interface is configured and operational, the router can install a connected route and a local route. A next hop is the next router along the path toward a remote destination.",
+              ],
+            },
+            {
+              title: "Choose the best route",
+              paragraphs: [
+                "When multiple routes match a destination, a router uses longest-prefix matching: it selects the matching route with the greatest prefix length. If no route matches and no default route exists, the packet is dropped.",
+                "A static route is entered manually. A dynamic route is learned through a routing protocol that shares network reachability information between routers.",
+              ],
+            },
+            {
+              title: "Configure static and default routes",
+              paragraphs: [
+                "The IOS ip route command specifies the destination network, mask, and next-hop IP address, outgoing interface, or both. Specifying only an exit interface can make a route appear directly connected, especially on multi-access networks; a next hop is often needed to identify the actual router.",
+                "The default route 0.0.0.0/0 is the least specific IPv4 route and is often used to direct Internet-bound traffic. A host sends off-subnet traffic to its default gateway. A router needs a route for the destination network, not a separate route for every intermediate network.",
+              ],
+              points: [
+                "Static routes are marked S in Cisco routing-table output.",
+                "An asterisk (*) marks a candidate default route.",
+                "“Gateway of last resort is not set” means no default route is available.",
+              ],
+            },
+          ],
+        },
       },
       {
         title: "VLSM and address planning",
@@ -958,3 +1278,5 @@ export const courseModules: CourseModule[] = [
     ],
   },
 ];
+
+export const courseModules = buildGroupedCourseModules(sourceCourseModules);

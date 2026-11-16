@@ -6,6 +6,7 @@ type LessonNotesProps = {
 
 export function LessonNotes({ notes }: LessonNotesProps) {
   const layers = notes.layers;
+  const references = notes.references ?? (notes.reference ? [notes.reference] : []);
 
   return (
     <section
@@ -108,15 +109,26 @@ export function LessonNotes({ notes }: LessonNotesProps) {
           </section>
         ))}
       </div>
-      {notes.reference && (
-        <a
-          className="mt-6 inline-flex text-sm font-medium text-cyan-700 underline decoration-cyan-300 underline-offset-4 transition hover:text-cyan-900"
-          href={notes.reference.url}
-          rel="noreferrer"
-          target="_blank"
-        >
-          Watch reference: {notes.reference.label}
-        </a>
+      {references.length > 0 && (
+        <div className="mt-6">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Course video references
+          </p>
+          <ul className="mt-2 flex flex-wrap gap-x-5 gap-y-2">
+            {references.map((reference) => (
+              <li key={reference.url}>
+                <a
+                  className="text-sm font-medium text-cyan-700 underline decoration-cyan-300 underline-offset-4 transition hover:text-cyan-900"
+                  href={reference.url}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  {reference.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </section>
   );

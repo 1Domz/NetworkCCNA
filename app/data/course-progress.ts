@@ -1,5 +1,20 @@
 import { courseModules } from "./course";
 import { interfacesCableQuestions } from "./interfaces-cable-questions";
+import { tcpIpQuestions } from "./tcp-ip-questions";
+import { cliQuestions } from "./cli-questions";
+import {
+  arpSwitchingQuestions,
+  ethernetFrameQuestions,
+} from "./ethernet-switching-questions";
+import {
+  ipv4AddressPartOneQuestions,
+  ipv4AddressPartTwoQuestions,
+} from "./ipv4-address-questions";
+import {
+  ipv4HeaderQuestions,
+  switchInterfaceQuestions,
+} from "./interface-ipv4-header-questions";
+import { routingQuestions } from "./routing-questions";
 
 export const COURSE_PROGRESS_STORAGE_KEY = "netpath-course-progress-v1";
 export const PASSING_PERCENTAGE = 90;
@@ -23,7 +38,17 @@ const allLessonIds = courseModules.flatMap((module, moduleIndex) =>
   module.lessons.map((_, lessonIndex) => `${moduleIndex}-${lessonIndex}`),
 );
 const allLessonIdSet = new Set(allLessonIds);
-const interfacesAndCablesLessonId = "0-1";
+const changedExamQuestionCounts: Record<string, number> = {
+  "0-1": interfacesCableQuestions.length,
+  "0-2": tcpIpQuestions.length,
+  "0-3": cliQuestions.length,
+  "1-0": ethernetFrameQuestions.length + arpSwitchingQuestions.length,
+  "1-1":
+    ipv4AddressPartOneQuestions.length + ipv4AddressPartTwoQuestions.length,
+  "1-2": switchInterfaceQuestions.length,
+  "1-3": ipv4HeaderQuestions.length,
+  "2-0": routingQuestions.length,
+};
 const emptyCourseProgress: SavedCourseProgress = {
   completedLessons: [],
   examResults: {},
@@ -160,15 +185,18 @@ function readStoredProgress(): CourseProgressSnapshot {
     };
   }
 
-  const interfacesAndCablesResult =
-    parsedProgress.examResults[interfacesAndCablesLessonId];
-  if (
-    interfacesAndCablesResult &&
-    interfacesAndCablesResult.total !== interfacesCableQuestions.length
-  ) {
-    const changedLessonOrder = allLessonIds.indexOf(
-      interfacesAndCablesLessonId,
+  const changedLessonId = allLessonIds.find((lessonId) => {
+    const expectedQuestionCount = changedExamQuestionCounts[lessonId];
+    const examResult = parsedProgress.examResults[lessonId];
+    return (
+      expectedQuestionCount !== undefined &&
+      examResult !== undefined &&
+      examResult.total !== expectedQuestionCount
     );
+  });
+
+  if (changedLessonId !== undefined) {
+    const changedLessonOrder = allLessonIds.indexOf(changedLessonId);
     const completedLessons = parsedProgress.completedLessons.filter(
       (lessonId) => allLessonIds.indexOf(lessonId) < changedLessonOrder,
     );
@@ -184,7 +212,7 @@ function readStoredProgress(): CourseProgressSnapshot {
 
     const migratedProgress = { completedLessons, examResults };
     let migrationError =
-      "The Lesson 2 exam changed, so its saved result and later lesson progress were reset. Pass the updated exam to unlock those lessons.";
+      "A lesson exam changed, so its saved result and later lesson progress were reset. Pass the updated exam to unlock those lessons.";
 
     try {
       window.localStorage.setItem(

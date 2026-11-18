@@ -54,6 +54,7 @@ type QuizQuestion =
 
 type LessonQuizProps = {
   lesson: CourseLesson;
+  canRecordCompletion: boolean;
   onComplete: (score: number, total: number) => void;
   onClose: () => void;
   previousResult?: LessonExamResult;
@@ -186,6 +187,7 @@ function createQuestions(lesson: CourseLesson): QuizQuestion[] {
 
 export function LessonQuiz({
   lesson,
+  canRecordCompletion,
   onComplete,
   onClose,
   previousResult,
@@ -286,7 +288,9 @@ export function LessonQuiz({
           </p>
           <p className="mt-2 text-sm leading-6 text-slate-600">
             {passed
-              ? "You passed the 90% requirement and this lesson is complete."
+              ? canRecordCompletion
+                ? "You passed the 90% requirement and this lesson is complete."
+                : "You passed this preview exam. Complete lessons in order to save your course progress."
               : `You need at least ${passingScore} of ${questions.length} correct to pass (90%). Review the answers and try again.`}
           </p>
           <div className="mt-4 flex flex-wrap justify-center gap-2">

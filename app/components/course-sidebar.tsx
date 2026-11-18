@@ -7,6 +7,8 @@ type CourseSidebarProps = {
   activeModuleIndex: number;
   activeLessonIndex: number;
   completedLessons: string[];
+  isPreviewMode: boolean;
+  onTogglePreviewMode: () => void;
   unlockedLessonCount: number;
   onSelectModule: (moduleIndex: number) => void;
   onSelectLesson: (moduleIndex: number, lessonIndex: number) => void;
@@ -19,6 +21,8 @@ export function CourseSidebar({
   activeModuleIndex,
   activeLessonIndex,
   completedLessons,
+  isPreviewMode,
+  onTogglePreviewMode,
   unlockedLessonCount,
   onSelectModule,
   onSelectLesson,
@@ -62,6 +66,69 @@ export function CourseSidebar({
         aria-label="Course modules and lessons"
         className="flex-1 overflow-y-auto px-3 py-4 lg:py-2"
       >
+        <div className="mb-4 rounded-xl border border-white/10 bg-white/[0.04] p-3">
+          <button
+            aria-pressed={isPreviewMode}
+            className={`flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-300 ${
+              isPreviewMode
+                ? "bg-cyan-300 text-slate-950 hover:bg-cyan-200"
+                : "bg-white/10 text-white hover:bg-white/[0.16]"
+            }`}
+            onClick={onTogglePreviewMode}
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              className="size-4"
+              fill="none"
+              viewBox="0 0 20 20"
+            >
+              {isPreviewMode ? (
+                <>
+                  <rect
+                    x="4"
+                    y="8.5"
+                    width="12"
+                    height="9"
+                    rx="2"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  />
+                  <path
+                    d="M6.5 8.5V6a3.5 3.5 0 0 1 7 0v2.5"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeWidth="1.5"
+                  />
+                </>
+              ) : (
+                <>
+                  <rect
+                    x="4"
+                    y="8.5"
+                    width="12"
+                    height="9"
+                    rx="2"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                  />
+                  <path
+                    d="M13.5 8.5V6a3.5 3.5 0 0 0-7 0v2.5"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeWidth="1.5"
+                  />
+                </>
+              )}
+            </svg>
+            {isPreviewMode ? "Lock lessons again" : "Preview all lessons"}
+          </button>
+          <p className="mt-2 text-center text-[11px] leading-4 text-slate-400">
+            {isPreviewMode
+              ? "All lessons are available. Exams still track your progress."
+              : "Browse any lesson; passing exams still tracks completion."}
+          </p>
+        </div>
         <ol className="space-y-1">
           {courseModules.map((module, moduleIndex) => {
             const moduleStartOrder = getLessonOrder(moduleIndex, 0);

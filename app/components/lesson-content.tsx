@@ -12,6 +12,7 @@ type LessonContentProps = {
   lessonIndex: number;
   lesson: CourseLesson;
   isComplete: boolean;
+  canRecordCompletion: boolean;
   canNavigatePrevious: boolean;
   canNavigateNext: boolean;
   previousExamResult?: LessonExamResult;
@@ -26,6 +27,7 @@ export function LessonContent({
   lessonIndex,
   lesson,
   isComplete,
+  canRecordCompletion,
   canNavigatePrevious,
   canNavigateNext,
   previousExamResult,
@@ -152,12 +154,18 @@ export function LessonContent({
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="max-w-lg">
               <p className="text-sm font-semibold text-slate-900">
-                {isComplete ? "Lesson passed" : "Unlock the next lesson"}
+                {isComplete
+                  ? "Lesson passed"
+                  : canRecordCompletion
+                    ? "Unlock the next lesson"
+                    : "Preview this lesson"}
               </p>
               <p className="mt-1 text-sm leading-6 text-slate-600">
                 {isComplete
                   ? "You passed this lesson exam. Review it any time."
-                  : "Score at least 90% on the exam to unlock the next lesson."}
+                  : canRecordCompletion
+                    ? "Score at least 90% on the exam to unlock the next lesson."
+                    : "Complete lessons in order to save your course progress."}
               </p>
             </div>
             <button
@@ -182,6 +190,7 @@ export function LessonContent({
           <LessonQuiz
             key={`${moduleIndex}-${lessonIndex}`}
             lesson={lesson}
+            canRecordCompletion={canRecordCompletion}
             onClose={() => setQuizOpen(false)}
             onComplete={onComplete}
             previousResult={previousExamResult}

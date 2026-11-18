@@ -41,6 +41,7 @@ export default function Home() {
   const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [mobileSidebarMounted, setMobileSidebarMounted] = useState(false);
+  const [previewAllLessons, setPreviewAllLessons] = useState(false);
   const [headerHidden, setHeaderHidden] = useState(false);
   const progressSnapshot = useSyncExternalStore(
     subscribeToCourseProgress,
@@ -59,15 +60,19 @@ export default function Home() {
     activeLessonIndex,
   );
   const isComplete = completedLessons.includes(lessonId);
+  const canRecordCompletion = activeLessonOrder <= completedLessons.length;
   const totalLessons = courseModules.reduce(
     (total, module) => total + module.lessons.length,
     0,
   );
+  const unlockedLessonCount = previewAllLessons
+    ? totalLessons
+    : completedLessons.length;
   const progress = Math.round((completedLessons.length / totalLessons) * 100);
   const canNavigatePrevious = activeLessonOrder > 0;
   const canNavigateNext =
     activeLessonOrder < totalLessons - 1 &&
-    activeLessonOrder < completedLessons.length;
+    activeLessonOrder < unlockedLessonCount;
 
   useEffect(() => {
     let previousScrollY = window.scrollY;
@@ -121,9 +126,7 @@ export default function Home() {
   }
 
   function selectLesson(moduleIndex: number, lessonIndex: number) {
-    if (
-      getLessonOrder(moduleIndex, lessonIndex) > completedLessons.length
-    ) {
+    if (getLessonOrder(moduleIndex, lessonIndex) > unlockedLessonCount) {
       return;
     }
 
@@ -132,10 +135,31 @@ export default function Home() {
     setMobileSidebarOpen(false);
   }
 
+  function toggleLessonPreview() {
+    const shouldPreviewAll = !previewAllLessons;
+    setPreviewAllLessons(shouldPreviewAll);
+
+    if (!shouldPreviewAll && activeLessonOrder > completedLessons.length) {
+      const lastUnlockedOrder = Math.min(
+        completedLessons.length,
+        totalLessons - 1,
+      );
+      const moduleIndex = courseModules.findIndex(
+        (module, index) =>
+          lastUnlockedOrder <
+          getLessonOrder(index, 0) + module.lessons.length,
+      );
+      setActiveModuleIndex(moduleIndex);
+      setActiveLessonIndex(
+        lastUnlockedOrder - getLessonOrder(moduleIndex, 0),
+      );
+    }
+  }
+
   function navigateLesson(direction: -1 | 1) {
     if (
       direction === 1 &&
-      activeLessonOrder >= completedLessons.length
+      activeLessonOrder >= unlockedLessonCount
     ) {
       return;
     }
@@ -161,6 +185,10 @@ export default function Home() {
   }
 
   function markLessonComplete(score: number, total: number) {
+    if (activeLessonOrder > completedLessons.length) {
+      return;
+    }
+
     saveCourseProgress({
       completedLessons: completedLessons.includes(lessonId)
         ? completedLessons
@@ -300,7 +328,9 @@ export default function Home() {
               activeLessonIndex={activeLessonIndex}
               activeModuleIndex={activeModuleIndex}
               completedLessons={completedLessons}
-              unlockedLessonCount={completedLessons.length}
+              isPreviewMode={previewAllLessons}
+              onTogglePreviewMode={toggleLessonPreview}
+              unlockedLessonCount={unlockedLessonCount}
               onSelectModule={(moduleIndex) =>
                 selectLesson(
                   moduleIndex,
@@ -339,7 +369,9 @@ export default function Home() {
                 activeLessonIndex={activeLessonIndex}
                 activeModuleIndex={activeModuleIndex}
                 completedLessons={completedLessons}
-                unlockedLessonCount={completedLessons.length}
+                isPreviewMode={previewAllLessons}
+                onTogglePreviewMode={toggleLessonPreview}
+                unlockedLessonCount={unlockedLessonCount}
                 onClose={() => setMobileSidebarOpen(false)}
                 onSelectModule={(moduleIndex) =>
                   selectLesson(
@@ -400,6 +432,7 @@ export default function Home() {
             <div className="mt-7 grid gap-5 lg:grid-cols-[minmax(0,1fr)_290px] lg:gap-6">
               <LessonContent
                 key={lessonId}
+                canRecordCompletion={canRecordCompletion}
                 canNavigateNext={canNavigateNext}
                 canNavigatePrevious={canNavigatePrevious}
                 isComplete={isComplete}
